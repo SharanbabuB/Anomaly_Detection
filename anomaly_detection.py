@@ -13,15 +13,15 @@ img_size = (128, 128)
 model = load_model('anomaly_detection_autoencoder.h5', custom_objects={'mse': MeanSquaredError()})
 
 # Twilio credentials
-TWILIO_ACCOUNT_SID = 'AC59831539aa04451efacab2ec660c5b86'
-TWILIO_AUTH_TOKEN = 'e6fe51d86218022ce39a783b52ee5c7b'
-TWILIO_PHONE_NUMBER = '+12088528480'
-TO_PHONE_NUMBER = '+917558159822'
+TWILIO_ACCOUNT_SID = 'acc sid'
+TWILIO_AUTH_TOKEN = 'auth token'
+TWILIO_PHONE_NUMBER = 'twilio phone no'
+TO_PHONE_NUMBER = 'phone no'
 
 # Email credentials
-SENDER_EMAIL = 'sharanbabub@gmail.com'
-SENDER_PASSWORD = 'omts xqiy rbge birx'
-RECIPIENT_EMAIL = 'sharanbabub2005@gmail.com'
+SENDER_EMAIL = 'sender@gmail.com'
+SENDER_PASSWORD = 'sender pass'
+RECIPIENT_EMAIL = 'recipient@gmail.com'
 
 def get_camera_source(camera_id):
     if camera_id == 1:
