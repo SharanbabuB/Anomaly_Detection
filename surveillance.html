@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surveillance Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .camera-feed {
+            margin-bottom: 20px;
+        }
+
+        .camera-feed img {
+            width: auto;
+            height: auto;
+            max-height: 300px;
+            object-fit: cover;
+        }
+
+        .button-container {
+            margin-top: 20px;
+        }
+
+        .status-normal {
+            color: green;
+        }
+
+        .status-anomaly {
+            color: red;
+        }
+
+        .status-paused {
+            color: orange;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="alert alert-info">
+            {% for message in messages %}
+            <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <h2>Surveillance Gallery</h2>
+        <p>Access live video surveillance with anomaly detection for multiple cameras.</p>
+
+        <div class="row">
+            {% for camera in cameras %}
+            <div class="col-md-6 camera-feed">
+                <div class="card">
+                    <h3 class="card-header">{{ camera.name }}</h3>
+                    <div class="card-body">
+                        <img id="camera-feed-{{ camera.id }}" src="{{ url_for('video_feed', camera_id=camera.id) }}" alt="Video Feed from {{ camera.name }}">
+                        <p><strong>Location:</strong> {{ camera.location }}</p>
+                        <p><strong>Status:</strong>
+                            <span id="status-{{ camera.id }}" class="status-normal">Normal</span>
+                        </p>
+                        <div class="button-container">
+                            <button class="btn btn-warning" onclick="pauseCamera({{ camera.id }})">Pause Video Feed</button>
+                            <button class="btn btn-success" onclick="resumeCamera({{ camera.id }});">Resume Video Feed</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="button-container">
+            <button onclick="stopAllFeeds()" class="btn btn-danger">Stop All Video Feeds</button>
+            <a href="{{ url_for('home') }}" class="btn btn-primary">Home</a>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Function to update camera statuses periodically
+            function updateCameraStatus(cameraId, status) {
+                const statusElement = $(`#status-${cameraId}`);
+                statusElement.text(status);
+
+                if (status.includes("Anomaly")) {
+                    statusElement.removeClass('status-normal').addClass('status-anomaly');
+                } else if (status === "Paused") {
+                    statusElement.removeClass('status-normal status-anomaly').addClass('status-paused');
+                } else {
+                    statusElement.removeClass('status-anomaly status-paused').addClass('status-normal');
+                }
+            }
+
+            // Fetch the camera statuses periodically every 2 seconds
+            setInterval(() => {
+                {% for camera in cameras %}
+                fetch(`/camera_status/{{ camera.id }}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        updateCameraStatus({{ camera.id }}, data.status);
+                    })
+                    .catch(error => console.error(`Error fetching status for camera ${camera.id}:`, error));
+                {% endfor %}
+            }, 1000); // Update every 2 seconds
+
+        });
+
+        // Function to pause a specific camera feed
+        function pauseCamera(cameraId) {
+            $.post(`/pause_camera/${cameraId}`, function (data) {
+                if (data.success) {
+                    $(`#camera-feed-${cameraId}`).attr('src', '');  // Clear the video feed
+                    updateCameraStatus(cameraId, 'Paused');  // Update status to Paused
+                    console.log(`Camera ${cameraId} paused.`);
+                }
+            }).fail(function () {
+                alert('Failed to pause camera.');
+            });
+        }
+
+        // Function to resume a specific camera feed
+        function resumeCamera(cameraId) {
+            $.post(`/resume_camera/${cameraId}`, function (data) {
+                if (data.success) {
+                    $(`#camera-feed-${cameraId}`).attr('src', `/video_feed/${cameraId}`);  // Restore video feed
+                    updateCameraStatus(cameraId, 'Normal');  // Update status to Normal
+                    console.log(`Camera ${cameraId} resumed.`);
+                }
+            }).fail(function () {
+                alert('Failed to resume camera.');
+            });
+        }
+
+        // Function to stop all video feeds
+        function stopAllFeeds() {
+            $('.camera-feed img').attr('src', '');  // Stop all video feeds by clearing sources
+            alert('All video feeds have been stopped.');
+            // Additional logic for stopping all feeds can be added here
+        }
+    </script>
+</body>
+
+</html>

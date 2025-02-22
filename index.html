@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+  <div class="content">
+    <h1>Welcome to Anomaly Detection System</h1>
+
+    {% if session['username'] %}
+      <p>Hello, {{ session['username'] }}! You are logged in. Use the navigation bar to explore the system.</p>
+      <a href="{{ url_for('profile') }}" class="btn btn-primary">View Profile</a>
+      <a href="{{ url_for('surveillance') }}" class="btn btn-primary">Surveillance Dashboard</a>
+    {% else %}
+      <p>Use the navigation bar to log in or sign up.</p>
+    {% endif %}
+  </div>
+{% endblock %}
